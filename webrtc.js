@@ -1,11 +1,23 @@
 const localVideo = document.getElementById('local-video');
 const remoteVideo = document.getElementById('remote-video');
-const mediaConstraints = {'mandatory': {'OfferToReceiveAudio':false, 'OfferToReceiveVideo':true }};
+const mediaConstraints = {'mandatory': {'OfferToReceiveAudio':true, 'OfferToReceiveVideo':false }};
 
 var peerConnection = null;
 var waitingOffer = true;
 
 var client = new Paho.MQTT.Client("localhost", 8083, window.location.hash || randomstring());
+
+function reportOffer(sdp) {
+  document.getElementById('offer').innerText = sdp;
+}
+
+function reportAnswer(sdp) {
+  document.getElementById('answer').innerText = sdp;
+}
+
+function reportWaitingAnswer() {
+  document.getElementById('role').innerText = "active";
+}
 
 client.onMessageArrived = (message) => {
   console.log("onMessageArrived: " + message.destinationName);
@@ -17,6 +29,7 @@ client.onMessageArrived = (message) => {
       sdp: text
     });
     peerConnection.setRemoteDescription(answer);
+    reportAnswer(answer.sdp);
   } else if (message.destinationName === mkTopic('offer') && waitingOffer) {
     startVideo(stream => {
       peerConnection = prepareNewConnection(stream);
@@ -25,10 +38,11 @@ client.onMessageArrived = (message) => {
        sdp: text
       });
       peerConnection.setRemoteDescription(offer);
+      reportOffer(text);
 
       peerConnection.createAnswer((sessionDescription) => {
         peerConnection.setLocalDescription(sessionDescription);
-        console.log("Answer SDP: " + sessionDescription);
+        reportAnswer(sessionDescription.sdp);
       }, (error) => {
         console.log("createAnswer error: " + error);
       }, mediaConstraints);
@@ -49,6 +63,7 @@ client.connect({
 
 function offer() {
   waitingOffer = false;
+  reportWaitingAnswer();
 
   startVideo(localStream => {
     peerConnection = prepareNewConnection(localStream);
@@ -56,7 +71,7 @@ function offer() {
     subscribe("answer");
     peerConnection.createOffer(function(sessionDescription) {
       peerConnection.setLocalDescription(sessionDescription);
-      console.log("Offer SDP: " + sessionDescription);
+      reportOffer(sessionDescription.sdp);
     }, function(error) {
       console.log("createOffer error: " + error);
     }, mediaConstraints);
@@ -70,12 +85,12 @@ function stop() {
 
 function startVideo(cb) {
   navigator.webkitGetUserMedia({
-    video: true,
-    audio: false
+    video: false,
+    audio: true
   }, (stream) => {
     localVideo.src = window.webkitURL.createObjectURL(stream);
     localVideo.play();
-    localVideo.volume = 0;
+    localVideo.volume = 0.1;
     cb(stream);
   }, (error) => {
     console.error('webkitGetUserMedia error occurred: [CODE ' + error.code + ']');
@@ -110,21 +125,21 @@ function prepareNewConnection(localStream) {
 
   peer.addStream(localStream);
 
-  let channel = peer.createDataChannel("messages", {
-    ordered: true,
-    maxPacketLifeTime: null,
-    maxRetransmits: null,
-    protocol: "",
-    negotiated: true,
-    id: 1
-  });
+  // let channel = peer.createDataChannel("messages", {
+  //   ordered: true,
+  //   maxPacketLifeTime: null,
+  //   maxRetransmits: null,
+  //   protocol: "",
+  //   negotiated: true,
+  //   id: 1
+  // });
 
-  channel.onopen = function(event) {
-    channel.send('Hi!');
-  };
-  channel.onmessage = function(event) {
-    console.log("channel.onmessage:", event.data);
-  };
+  // channel.onopen = function(event) {
+  //   channel.send('Hi!');
+  // };
+  // channel.onmessage = function(event) {
+  //   console.log("channel.onmessage:", event.data);
+  // };
 
   peer.addEventListener("addstream", (event) => {
     remoteVideo.src = window.webkitURL.createObjectURL(event.stream);

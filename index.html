@@ -5,20 +5,87 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
         <style>
          video {
-             width: 240px;
-             height: 180px;
-             border: 1px solid black;
+             width: 99%;
+             height: 99%;
+             max-height: 480px;
+         }
+
+         .videos {
+             text-align: center;
+         }
+
+         html {
+             box-sizing: border-box;
+         }
+
+         body {
+             font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+             color: #606c76;
+             font-size: 1.6em;
+             font-weight: 300;
+             letter-spacing: .01em;
+             line-height: 1.6;
+         }
+
+         pre {
+             font-size: 0.6em;
+         }
+
+         .container {
+             display: flex;
+             justify-content: space-evenly;
+         }
+
+         .container div {
+             background: #eee;
+             min-width: 49%;
+             font-family: monospace;
+             overflow: scroll;
+         }
+
+         button {
+             margin-bottom: 1.0rem;
+             background-color: #eee;
+             border: 0.1rem solid #333;
+             border-radius: .4rem;
+             color: #111;
+             cursor: pointer;
+             display: inline-block;
+             letter-spacing: .05rem;
+             height: 1.7rem;
+             line-height: 1.3rem;
+             padding: 0 1.5rem;
+             text-align: center;
+             text-decoration: none;
+             text-transform: uppercase;
+             white-space: nowrap;
          }
         </style>
     </head>
     <body>
-      <button type="button" onclick="offer();">Offer</button>
-      <button type="button" onclick="stop();">Stop</button>
-      <br />
-      <div>
-        <video id="local-video" autoplay="true"></video>
-        <video id="remote-video" autoplay="true"></video>
-      </div>
+        <div class="buttons">
+            <button type="button" onclick="offer();">Offer</button>
+            <button type="button" onclick="stop();">Stop</button>
+            <div id="role">passive</div>
+        </div>
+        <div class="container">
+            <div>
+                <video id="local-video" autoplay="true"></video>
+            </div>
+            <div>
+                <video id="remote-video" autoplay="true"></video>
+            </div>
+        </div>
+        <div class="container">
+            <div id="offer">
+                Offer
+            </div>
+            <div id="answer">
+                Answer
+            </div>
+        </div>
+        <div
+
     </body>
 
     <script type="text/javascript" src="/webrtc.js"></script>
